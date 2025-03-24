@@ -10,10 +10,12 @@
 
 ```bash
 # 1. このリポジトリをクローン
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
+git clone https://github.com/maotamayose/buyma.git
+cd buyma
 
 # 2. VS Codeで開く
 code .
 
 # 3. 「Reopen in Container」を選択（右下のポップアップ or Ctrl+Shift+P）
+
+.envファイルを作成するように！！
