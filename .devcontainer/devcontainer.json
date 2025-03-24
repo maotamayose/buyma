@@ -1,0 +1,10 @@
+{
+  "name": "Fullstack DevContainer",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/app",
+  "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"],
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
+  }
+}
