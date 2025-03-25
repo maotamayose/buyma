@@ -1,35 +1,59 @@
-import { Router } from "express";
-import { extractImagesFromUrl } from "../services/imageScraper";
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
+import { extractImagesFromUrl } from '../services/imageScraper';
 
-const router = Router();
+interface ImageScrapeBody {
+  url: string;
+}
 
-/**
- * POST /image/scrape
- * リクエストボディに指定されたURLから画像を抽出し、画像URL一覧を返す
- *
- * リクエストボディ例:
- * {
- *   "url": "https://example.com"
- * }
- *
- * レスポンス例:
- * {
- *   "images": ["https://example.com/img1.jpg", "https://example.com/img2.png"]
- * }
- */
-router.post("/scrape", async (req, res) => {
-  const { url } = req.body;
-  console.log("📥 /image/scrape にPOSTされたURL:", url);
+export default async function imageRouter(
+  fastify: FastifyInstance,
+  options: FastifyPluginOptions
+) {
+  fastify.post<{
+    Body: ImageScrapeBody;
+  }>('/scrape', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['url'],
+        properties: {
+          url: { type: 'string', format: 'uri' }
+        }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            images: {
+              type: 'array',
+              items: { type: 'string', format: 'uri' }
+            }
+          }
+        },
+        400: {
+          type: 'object',
+          properties: {
+            error: { type: 'string' }
+          }
+        },
+        500: {
+          type: 'object',
+          properties: {
+            error: { type: 'string' }
+          }
+        }
+      }
+    }
+  }, async (request: FastifyRequest<{ Body: ImageScrapeBody }>, reply: FastifyReply) => {
+    const { url } = request.body;
+    request.log.info(`📥 /image/scrape にPOSTされたURL: ${url}`);
 
-  if (!url) {
-    return res.status(400).json({ error: "URL is required" });
-  }
-
-  try {
-    const images = await extractImagesFromUrl(url);
-    res.json({ images });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to scrape images" });
-  }
-});
-export default router;
+    try {
+      const images = await extractImagesFromUrl(url);
+      reply.send({ images });
+    } catch (error) {
+      request.log.error(error, '画像抽出に失敗しました');
+      reply.status(500).send({ error: 'Failed to scrape images' });
+    }
+  });
+}

@@ -1,7 +1,20 @@
-import app from "./app";
+import { buildApp } from './app';
+import dotenv from 'dotenv';
 
-const PORT = process.env.PORT || 3001;
+dotenv.config(); // .env を忘れずに読み込むでしゅ！
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+const start = async () => {
+  const app = buildApp();
+
+  const port = Number(process.env.PORT) || 3001;
+
+  try {
+    await app.listen({ port, host: '0.0.0.0' }); // Docker対応で host も指定！
+    console.log(`🚀 サーバー動いたでしゅ！ → http://localhost:${port}`);
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1); // 起動に失敗したら安全に止めるでしゅ！
+  }
+};
+
+start(); // 起動！

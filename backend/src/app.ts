@@ -1,16 +1,23 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import productRouter from "./routes/productRouter";
-import imageRouter from "./routes/imageRouter";
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import dotenv from 'dotenv';
+
+import productRouter from './routes/productRouter';
+import imageRouter from './routes/imageRouter';
 
 dotenv.config();
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+export function buildApp() {
+  const fastify = Fastify({ logger: true });
 
-app.use("/product", productRouter);
-app.use("/image", imageRouter);
+  // CORS
+  fastify.register(cors, {
+    origin: '*', // 本番では適切に制限をかける
+  });
 
-export default app;
+  // ルート登録
+  fastify.register(productRouter, { prefix: '/product' });
+  fastify.register(imageRouter, { prefix: '/image' });
+
+  return fastify;
+}
