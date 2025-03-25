@@ -1,7 +1,4 @@
 import { buildApp } from './app';
-import dotenv from 'dotenv';
-
-dotenv.config(); // .env を忘れずに読み込むでしゅ！
 
 const start = async () => {
   const app = buildApp();
