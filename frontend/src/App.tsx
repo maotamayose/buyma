@@ -5,6 +5,8 @@ function App() {
   const [brand, setBrand] = useState("");
   const [keyword, setKeyword] = useState("");
   const [results, setResults] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -17,16 +19,27 @@ function App() {
     setLoading(true);
     setError("");
     setResults([]);
+    setImages([]);
+    setSelected(new Set());
 
     try {
       const res = await axios.get("http://localhost:3001/product", {
-        params: {
-          brand,
-          keyword,
-        },
+        params: { brand, keyword },
       });
 
-      setResults(res.data.results || []);
+      const urls = res.data.results || [];
+      setResults(urls);
+
+      if (urls.length > 0) {
+        // 最初のURLの画像を取得
+        const imageRes = await axios.post(
+          "http://localhost:3001/image/scrape",
+          {
+            url: urls[0],
+          }
+        );
+        setImages(imageRes.data.images);
+      }
     } catch (err: any) {
       console.error(err);
       setError("検索に失敗しました");
@@ -35,9 +48,17 @@ function App() {
     }
   };
 
+  const toggleImage = (img: string) => {
+    const newSet = new Set(selected);
+    newSet.has(img) ? newSet.delete(img) : newSet.add(img);
+    setSelected(newSet);
+  };
+
   return (
     <div style={{ padding: "2rem" }}>
-      <h1>商品検索</h1>
+      <h1>商品検索 & 画像表示</h1>
+
+      {/* 検索フォーム */}
       <input
         type="text"
         placeholder="ブランド名 (例: nike)"
@@ -58,6 +79,7 @@ function App() {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
+      {/* 結果リンク */}
       <ul>
         {results.map((url, index) => (
           <li key={index}>
@@ -67,6 +89,25 @@ function App() {
           </li>
         ))}
       </ul>
+
+      {/* 画像一覧 */}
+      <div style={{ marginTop: 30 }}>
+        {images.length > 0 && <h2>画像一覧（{images.length}枚）</h2>}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          {images.map((img, index) => (
+            <div key={`${img}-${index}`} style={{ textAlign: "center" }}>
+              <img src={img} alt="" width="150" />
+              <div>
+                <input
+                  type="checkbox"
+                  checked={selected.has(img)}
+                  onChange={() => toggleImage(img)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
